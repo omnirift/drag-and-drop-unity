@@ -29,12 +29,18 @@ public class UIElementDragger : MonoBehaviour {
     {
 		if (Input.GetMouseButtonDown(0))
         {
-            objectToDrag = GetDraggableObjectUnderMouse().transform;
-            dragging = true;
+            objectToDrag = GetDraggableTransformUnderMouse();
 
-            originalPosition = objectToDrag.position;
-            objectToDragImage = objectToDrag.GetComponent<Image>();
-            objectToDragImage.raycastTarget = false;
+            if (objectToDrag != null)
+            {
+                dragging = true;
+
+                objectToDrag.SetAsLastSibling();
+
+                originalPosition = objectToDrag.position;
+                objectToDragImage = objectToDrag.GetComponent<Image>();
+                objectToDragImage.raycastTarget = false;
+            }
         }
 
         if (dragging)
@@ -44,10 +50,24 @@ public class UIElementDragger : MonoBehaviour {
 
         if (Input.GetMouseButtonUp(0))
         {
+            if (objectToDrag != null)
+            {
+                var objectToReplace = GetDraggableTransformUnderMouse();
 
+                if (objectToReplace != null)
+                {
+                    objectToDrag.position = objectToReplace.position;
+                    objectToReplace.position = originalPosition;
+                }
+                else
+                {
+                    objectToDrag.position = originalPosition;
+                }
 
-            objectToDragImage.raycastTarget = true;
-            objectToDrag = null;
+                objectToDragImage.raycastTarget = true;
+                objectToDrag = null;
+            }
+
             dragging = false;
         }
 	}
@@ -65,14 +85,14 @@ public class UIElementDragger : MonoBehaviour {
         return hitObjects.First().gameObject;        
     }
 
-    private GameObject GetDraggableObjectUnderMouse()
+    private Transform GetDraggableTransformUnderMouse()
     {
         var clickedObject = GetObjectUnderMouse();
 
         // get top level object hit
         if (clickedObject != null && clickedObject.tag == DRAGGABLE_TAG)
         {
-            return clickedObject;
+            return clickedObject.transform;
         }
 
         return null;
